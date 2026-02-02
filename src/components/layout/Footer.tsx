@@ -1,0 +1,60 @@
+import { Leaf, Heart, Github, Twitter } from 'lucide-react';
+
+export const Footer = () => {
+  return (
+    <footer className="bg-primary text-primary-foreground py-12">
+      <div className="container px-4 md:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Brand */}
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
+                <Leaf className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <span className="font-bold text-xl">FoodBridge</span>
+            </div>
+            <p className="text-primary-foreground/70 max-w-sm">
+              Connecting food surplus with communities in need. Together, we're turning 
+              waste into impact, one meal at a time.
+            </p>
+          </div>
+
+          {/* Links */}
+          <div>
+            <h4 className="font-semibold mb-4">Platform</h4>
+            <ul className="space-y-2 text-primary-foreground/70">
+              <li><a href="#how-it-works" className="hover:text-primary-foreground transition-colors">How It Works</a></li>
+              <li><a href="#benefits" className="hover:text-primary-foreground transition-colors">Benefits</a></li>
+              <li><a href="#join-platform" className="hover:text-primary-foreground transition-colors">Join Us</a></li>
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="font-semibold mb-4">Connect</h4>
+            <ul className="space-y-2 text-primary-foreground/70">
+              <li><a href="#" className="hover:text-primary-foreground transition-colors">Contact</a></li>
+              <li><a href="#" className="hover:text-primary-foreground transition-colors">Support</a></li>
+              <li><a href="#" className="hover:text-primary-foreground transition-colors">FAQs</a></li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="mt-12 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-primary-foreground/60">
+            © 2024 FoodBridge. Made with <Heart className="w-3 h-3 inline text-accent" /> for the community.
+          </p>
+          <div className="flex items-center gap-4">
+            <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">
+              <Twitter className="w-5 h-5" />
+            </a>
+            <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">
+              <Github className="w-5 h-5" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};

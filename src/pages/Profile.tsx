@@ -1,0 +1,178 @@
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { User, Mail, Phone, Building, Camera, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+const Profile = () => {
+    const { user, updateUser } = useAuth();
+    const navigate = useNavigate();
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({
+        displayName: user?.displayName || "",
+        email: user?.email || "",
+        phoneNumber: user?.phoneNumber || "",
+        companyName: user?.companyName || "",
+    });
+
+    if (!user) return null;
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSave = () => {
+        updateUser(formData);
+        setIsEditing(false);
+        toast.success("Profile updated successfully!");
+    };
+
+    const handlePhotoUpload = () => {
+        // Mock photo upload
+        const mockImages = [
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+            "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+        ];
+        const randomImg = mockImages[Math.floor(Math.random() * mockImages.length)];
+        updateUser({ profilePic: randomImg });
+        toast.success("Profile picture updated!");
+    };
+
+    const backToDashboard = () => {
+        navigate(user.role === "donor" ? "/donor/dashboard" : "/ngo/dashboard");
+    };
+
+    return (
+        <div className="min-h-screen bg-background p-4 md:p-8">
+            <div className="max-w-2xl mx-auto space-y-6">
+                <Button
+                    variant="outline"
+                    onClick={backToDashboard}
+                    className="transition-all active:scale-95 group mb-2"
+                >
+                    <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                    Back to Dashboard
+                </Button>
+
+                <Card className="border-none shadow-premium overflow-hidden">
+                    <div className="h-32 bg-gradient-to-r from-foodbridge-green/20 to-foodbridge-teal/20" />
+                    <CardHeader className="relative pb-0">
+                        <div className="absolute -top-16 left-6">
+                            <div className="relative group">
+                                <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
+                                    <AvatarImage src={user.profilePic} />
+                                    <AvatarFallback className="bg-foodbridge-green text-white text-3xl">
+                                        {user.displayName.charAt(0)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <button
+                                    onClick={handlePhotoUpload}
+                                    className="absolute bottom-0 right-0 p-2 bg-background rounded-full shadow-md border hover:bg-muted transition-colors group-hover:scale-110"
+                                >
+                                    <Camera className="h-5 w-5 text-muted-foreground" />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="pt-16 pb-6 flex justify-between items-end">
+                            <div>
+                                <CardTitle className="text-2xl font-bold">{user.displayName}</CardTitle>
+                                <CardDescription className="text-foodbridge-green font-medium">
+                                    {user.role === 'ngo' ? 'NGO' : 'Donor'} Account
+                                </CardDescription>
+                            </div>
+                            {!isEditing && (
+                                <Button onClick={() => setIsEditing(true)} variant="outline">
+                                    Edit Profile
+                                </Button>
+                            )}
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <Label className="text-muted-foreground flex items-center gap-2">
+                                    <User className="h-4 w-4" /> Display Name
+                                </Label>
+                                {isEditing ? (
+                                    <Input
+                                        name="displayName"
+                                        value={formData.displayName}
+                                        onChange={handleInputChange}
+                                    />
+                                ) : (
+                                    <p className="font-medium">{user.displayName || "Not set"}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-muted-foreground flex items-center gap-2">
+                                    <Building className="h-4 w-4" /> {user.role === "donor" ? "Restaurant/Company Name" : "NGO Name"}
+                                </Label>
+                                {isEditing ? (
+                                    <Input
+                                        name="companyName"
+                                        value={formData.companyName}
+                                        onChange={handleInputChange}
+                                    />
+                                ) : (
+                                    <p className="font-medium">{user.companyName || "Not set"}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-muted-foreground flex items-center gap-2">
+                                    <Mail className="h-4 w-4" /> Email Address
+                                </Label>
+                                {isEditing ? (
+                                    <Input
+                                        name="email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={handleInputChange}
+                                    />
+                                ) : (
+                                    <p className="font-medium">{user.email || "Not set"}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-muted-foreground flex items-center gap-2">
+                                    <Phone className="h-4 w-4" /> Phone Number
+                                </Label>
+                                {isEditing ? (
+                                    <Input
+                                        name="phoneNumber"
+                                        value={formData.phoneNumber}
+                                        onChange={handleInputChange}
+                                    />
+                                ) : (
+                                    <p className="font-medium">{user.phoneNumber || "Not set"}</p>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                    {isEditing && (
+                        <CardFooter className="bg-muted/30 gap-3 justify-end border-t mt-6">
+                            <Button variant="ghost" onClick={() => setIsEditing(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleSave} className="bg-foodbridge-green hover:bg-foodbridge-green/90">
+                                Save Changes
+                            </Button>
+                        </CardFooter>
+                    )}
+                </Card>
+            </div>
+        </div>
+    );
+};
+
+export default Profile;
