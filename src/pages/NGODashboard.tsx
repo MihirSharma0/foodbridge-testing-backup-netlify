@@ -225,13 +225,19 @@ const NGODashboard = () => {
                     variant="ngo"
                     showContact
                     onAction={
-                      donation.status === 'requested'
-                        ? (donation.requestedBy === user?.id ? () => handleCancelRequest(donation.id) : undefined)
-                        : (donation.status === 'collected' ? undefined : () => handleMarkCollected(donation.id))
+                      donation.status === 'requested' || donation.status === 'available'
+                        ? () => handleMarkCollected(donation.id)
+                        : undefined
+                    }
+                    onSecondaryAction={
+                      donation.status === 'requested' && donation.requestedBy === user?.id
+                        ? () => handleCancelRequest(donation.id)
+                        : undefined
                     }
                     onDelete={donation.status === 'collected' ? () => handleDeleteEntry(donation.id) : undefined}
-                    actionLabel={donation.status === 'requested' ? "Cancel Request" : "Mark Collective"}
-                    actionVariant={donation.status === 'requested' ? "outline" : "default"}
+                    actionLabel={donation.status === 'collected' ? undefined : "Mark as Picked Up"}
+                    secondaryActionLabel="Cancel Pickup"
+                    actionVariant="default"
                   />
                 </motion.div>
               );

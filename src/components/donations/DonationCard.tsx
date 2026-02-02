@@ -13,6 +13,8 @@ interface DonationCardProps {
   onDelete?: () => void;
   actionLabel?: string;
   actionVariant?: 'default' | 'destructive' | 'outline';
+  onSecondaryAction?: () => void;
+  secondaryActionLabel?: string;
   showContact?: boolean;
 }
 
@@ -23,6 +25,8 @@ export const DonationCard = ({
   onDelete,
   actionLabel,
   actionVariant = 'default',
+  onSecondaryAction,
+  secondaryActionLabel,
   showContact = false,
 }: DonationCardProps) => {
   const { user } = useAuth();
@@ -235,11 +239,11 @@ export const DonationCard = ({
         </div>
 
         <div className="flex gap-2">
-          {isCancellable && onAction && variant === 'ngo' && (
+          {isCancellable && onSecondaryAction && variant === 'ngo' && (
             <Button
               size="sm"
               variant="outline"
-              onClick={onAction}
+              onClick={onSecondaryAction}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               className="rounded-xl flex-shrink-0 border-destructive text-destructive hover:bg-destructive hover:text-white transition-all duration-300 min-w-[120px]"
@@ -250,12 +254,12 @@ export const DonationCard = ({
                   {formatCountdown(timeLeftMs)}
                 </span>
               ) : (
-                'Cancel Request'
+                secondaryActionLabel || 'Cancel Request'
               )}
             </Button>
           )}
 
-          {!isCancellable && onAction && actionLabel && donation.status !== 'collected' && (
+          {onAction && actionLabel && (
             <Button
               size="sm"
               variant={actionVariant}
