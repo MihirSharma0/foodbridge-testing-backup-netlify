@@ -56,9 +56,14 @@ export const DonationCard = ({
   };
 
   const getExpiryStatus = () => {
-    if (hoursUntilExpiry <= 1) return { label: 'Urgent', color: 'bg-destructive text-destructive-foreground' };
-    if (hoursUntilExpiry <= 3) return { label: `Safe for pickup till ${formatTime(donation.expiryTime)}`, color: 'bg-amber text-white' };
-    return { label: 'Fresh', color: 'bg-primary text-primary-foreground' };
+    let label = `Safe for pickup till ${formatTime(donation.expiryTime)}`;
+    if (hoursUntilExpiry <= 1) {
+      const minutesLeft = Math.max(0, Math.floor(hoursUntilExpiry * 60));
+      label += ` (${minutesLeft}m left)`;
+      return { label, color: 'bg-destructive text-destructive-foreground' };
+    }
+    if (hoursUntilExpiry <= 3) return { label, color: 'bg-amber text-white' };
+    return { label, color: 'bg-primary text-primary-foreground' };
   };
 
   const getStatusBadge = () => {
@@ -97,8 +102,8 @@ export const DonationCard = ({
       "bento-card relative overflow-hidden transition-all duration-300",
       donation.status === 'collected' && "opacity-60"
     )}>
-      {/* Delete button (Top Right, Collected Only) */}
-      {donation.status === 'collected' && onDelete && (
+      {/* Delete button (Top Right, Collected or Cancelled Only) */}
+      {(donation.status === 'collected' || donation.status === 'cancelled') && onDelete && (
         <button
           onClick={onDelete}
           className="absolute top-3 right-3 p-2 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors z-10"
@@ -116,7 +121,7 @@ export const DonationCard = ({
                 {donation.items.some(i => i.isVeg) && <div className="veg-indicator border-background" />}
                 {donation.items.some(i => !i.isVeg) && <div className="nonveg-indicator border-background" />}
               </div>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm text-muted-foreground font-medium">
                 {donation.items.every(i => i.isVeg) ? 'All Veg' :
                   donation.items.every(i => !i.isVeg) ? 'All Non-Veg' : 'Mixed Type'}
               </span>
@@ -124,7 +129,7 @@ export const DonationCard = ({
           ) : (
             <div className="flex items-center gap-2">
               <div className={donation.isVeg ? 'veg-indicator' : 'nonveg-indicator'} />
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm text-muted-foreground font-medium">
                 {donation.isVeg ? 'Vegetarian' : 'Non-Vegetarian'}
               </span>
             </div>
@@ -238,7 +243,18 @@ export const DonationCard = ({
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 w-full sm:w-auto ml-auto">
+          {onAction && actionLabel && (
+            <Button
+              size="sm"
+              variant={actionVariant}
+              onClick={onAction}
+              className="rounded-xl w-full"
+            >
+              {actionLabel}
+            </Button>
+          )}
+
           {isCancellable && onSecondaryAction && variant === 'ngo' && (
             <Button
               size="sm"
@@ -246,7 +262,7 @@ export const DonationCard = ({
               onClick={onSecondaryAction}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
-              className="rounded-xl flex-shrink-0 border-destructive text-destructive hover:bg-destructive hover:text-white transition-all duration-300 min-w-[120px]"
+              className="rounded-xl border-destructive text-destructive hover:bg-destructive hover:text-white transition-all duration-300 w-full"
             >
               {isHovered ? (
                 <span className="flex items-center gap-1.5">
@@ -256,17 +272,6 @@ export const DonationCard = ({
               ) : (
                 secondaryActionLabel || 'Cancel Request'
               )}
-            </Button>
-          )}
-
-          {onAction && actionLabel && (
-            <Button
-              size="sm"
-              variant={actionVariant}
-              onClick={onAction}
-              className="rounded-xl flex-shrink-0 ml-auto"
-            >
-              {actionLabel}
             </Button>
           )}
         </div>
