@@ -35,8 +35,7 @@ interface AuthContextType {
   isEmailVerified: boolean;
   needsProfile: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; unverified?: boolean }>;
-  loginWithGoogle: (role?: UserRole) => Promise<{ success: boolean; error?: string; needsProfile?: boolean }>;
+  signUp: (email: string, password: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<void>;
   createProfile: (profileData: Omit<User, 'id' | 'email' | 'username'>) => Promise<{ success: boolean; error?: string }>;
@@ -74,7 +73,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (manualUser) {
         const profile = JSON.parse(manualUser) as User;
         setUser(profile);
-        setIsEmailVerified(true);
         setNeedsProfile(false);
         setIsLoading(false);
         return;
