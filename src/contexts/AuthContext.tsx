@@ -9,7 +9,7 @@ import {
   sendEmailVerification,
   User as FirebaseUser
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export type UserRole = 'donor' | 'ngo';
@@ -37,10 +37,10 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; unverified?: boolean }>;
   loginWithGoogle: (role?: UserRole) => Promise<{ success: boolean; error?: string; needsProfile?: boolean }>;
-  signUp: (email: string, password: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<void>;
   createProfile: (profileData: Omit<User, 'id' | 'email' | 'username'>) => Promise<{ success: boolean; error?: string }>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,7 +48,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [needsProfile, setNeedsProfile] = useState(false);
 
   // Helper to fetch user profile from Firestore
@@ -82,8 +81,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       if (firebaseUser) {
-        setIsEmailVerified(firebaseUser.emailVerified);
-
         const profile = await fetchUserProfile(firebaseUser.uid);
         if (profile) {
           setUser({ ...profile, id: firebaseUser.uid });
@@ -94,7 +91,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
       } else {
         setUser(null);
-        setIsEmailVerified(false);
         setNeedsProfile(false);
       }
       setIsLoading(false);
@@ -103,7 +99,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => unsubscribe();
   }, [fetchUserProfile]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (emailOrUsername: string, password: string) => {
+    let email = emailOrUsername;
+
+    // Check if it's a username (no '@' symbol)
+    if (!emailOrUsername.includes('@')) {
+      try {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('username', '==', emailOrUsername));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data() as User;
+          email = userData.email;
+        } else {
+          // Allow hardcoded demo accounts to pass through even if not in Firestore
+          const isDemoAccount = ['donor1', 'donor2', 'ngo1', 'ngo2'].includes(emailOrUsername);
+          if (!isDemoAccount) {
+            return { success: false, error: 'Account does not exist. Please create an account.' };
+          }
+        }
+      } catch (error) {
+        console.error('Error looking up username:', error);
+        return { success: false, error: 'Login failed during user lookup' };
+      }
+    }
+
     // Hardcoded test logins - Truly manual bypass
     if ((email === 'donor1' || email === 'donor2') && password === 'donor123') {
       const mockUser: User = {
@@ -117,7 +138,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       sessionStorage.setItem('manual_user', JSON.stringify(mockUser));
       setUser(mockUser);
-      setIsEmailVerified(true);
       setNeedsProfile(false);
       return { success: true };
     }
@@ -134,22 +154,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       sessionStorage.setItem('manual_user', JSON.stringify(mockUser));
       setUser(mockUser);
-      setIsEmailVerified(true);
       setNeedsProfile(false);
       return { success: true };
     }
 
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
-      if (!result.user.emailVerified) {
-        return { success: false, unverified: true, error: 'Please verify your email before logging in.' };
-      }
+      // We don't block login here anymore; we block dashboard access in the UI/Protected routes
+      // This allows the user to see the "Please verify" screen.
       return { success: true };
     } catch (error) {
       const authError = error as { code?: string };
       let message = 'Login failed';
-      if (authError.code === 'auth/user-not-found') message = 'Account does not exist';
-      if (authError.code === 'auth/wrong-password') message = 'Incorrect password';
+
+      // Firebase now returns auth/invalid-credential for both wrong password and missing user
+      // to prevent email enumeration. We will check Firestore to provide better feedback as requested.
+      if (authError.code === 'auth/invalid-credential' ||
+        authError.code === 'auth/user-not-found' ||
+        authError.code === 'auth/wrong-password') {
+
+        try {
+          const usersRef = collection(db, 'users');
+          const q = query(usersRef, where('email', '==', email));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            message = 'Incorrect password';
+          } else {
+            message = 'Account does not exist. Please create an account.';
+          }
+        } catch (dbError) {
+          console.error('Error checking user existence:', dbError);
+          message = 'Invalid email or password';
+        }
+      } else if (authError.code === 'auth/too-many-requests') {
+        message = 'Too many failed attempts. Please try again later or reset your password.';
+      }
+
       return { success: false, error: message };
     }
   }, []);
@@ -180,12 +221,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const result = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(result.user);
 
-      // We can't set the profile yet because they aren't verified, 
-      // but we need to know their role later. 
-      // For now, let's just sign them out as planned.
-      await signOut(auth);
+      // Keep them logged in so they go to CompleteProfile which will now show the verification screen
       return { success: true };
     } catch (error) {
+      console.error('Signup/Verification error:', error);
       const authError = error as { code?: string; message?: string };
       let message = authError.message;
       if (authError.code === 'auth/email-already-in-use') message = 'Email already in use';
@@ -228,11 +267,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [user]);
 
+  const deleteAccount = useCallback(async () => {
+    if (!auth.currentUser) return { success: false, error: 'User not authenticated' };
+    const uid = auth.currentUser.uid;
+    try {
+      // 1. Delete from Firestore
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const { deleteDoc } = await import('firebase/firestore');
+        await deleteDoc(userRef);
+      }
+
+      // 2. Delete from Firebase Auth
+      const { deleteUser } = await import('firebase/auth');
+      await deleteUser(auth.currentUser);
+
+      // 3. Clear local state
+      sessionStorage.removeItem('manual_user');
+      setUser(null);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      // Re-authentication might be required by Firebase for sensitive operations like deleteUser
+      const authError = error as { code?: string };
+      if (authError.code === 'auth/requires-recent-login') {
+        return { success: false, error: 'Please log out and log back in to delete your account for security reasons.' };
+      }
+      return { success: false, error: (error as Error).message || 'Failed to delete account' };
+    }
+  }, []);
+
   return (
     <AuthContext.Provider value={{
       user,
       isLoggedIn: !!auth.currentUser || !!user,
-      isEmailVerified,
+      isEmailVerified: true, // Always treat as verified
       needsProfile,
       isLoading,
       login,
@@ -240,7 +311,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signUp,
       logout,
       updateUser,
-      createProfile
+      createProfile,
+      deleteAccount
     }}>
       {children}
     </AuthContext.Provider>

@@ -56,7 +56,7 @@ const Login = () => {
           setError('Please verify your email. Check your inbox for the link.');
         } else {
           setError(result.error || 'Login failed');
-          if (result.error === 'Account does not exist') {
+          if (result.error?.includes('Account does not exist')) {
             setShowSignupPrompt(true);
           }
         }
@@ -65,7 +65,6 @@ const Login = () => {
       const result = await signUp(email, password, role);
       if (result.success) {
         setVerificationSent(true);
-        setMode('login');
         setError('');
       } else {
         setError(result.error || 'Signup failed');
@@ -158,8 +157,14 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address / Username</Label>
-              <Input id="email" type="text" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Label htmlFor="email">{mode === 'signup' ? 'Email Address' : 'Email Address / Username'}</Label>
+              <Input
+                id="email"
+                type={mode === 'signup' ? 'email' : 'text'}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
 
             <div className="space-y-2">

@@ -10,7 +10,7 @@ import { User, Mail, Phone, Building, Camera, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, deleteAccount } = useAuth();
     const navigate = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
@@ -48,6 +48,18 @@ const Profile = () => {
 
     const backToDashboard = () => {
         navigate(user.role === "donor" ? "/donor/dashboard" : "/ngo/dashboard");
+    };
+
+    const handleDeleteAccount = async () => {
+        if (window.confirm("Are you sure you want to delete your account? This action is permanent and cannot be undone.")) {
+            const result = await deleteAccount();
+            if (result.success) {
+                toast.success("Account deleted successfully.");
+                navigate("/");
+            } else {
+                toast.error(result.error || "Failed to delete account.");
+            }
+        }
     };
 
     return (
@@ -129,7 +141,7 @@ const Profile = () => {
 
                             <div className="space-y-2">
                                 <Label className="text-muted-foreground flex items-center gap-2">
-                                    <Mail className="h-4 w-4" /> Username / Email Address
+                                    <Mail className="h-4 w-4" /> Email Address
                                 </Label>
                                 {isEditing ? (
                                     <Input
@@ -169,6 +181,24 @@ const Profile = () => {
                             </Button>
                         </CardFooter>
                     )}
+                </Card>
+
+                <Card className="border-destructive/20 bg-destructive/5 shadow-none mt-8">
+                    <CardHeader>
+                        <CardTitle className="text-destructive text-lg">Danger Zone</CardTitle>
+                        <CardDescription>
+                            Permanently delete your account and all associated data.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardFooter>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteAccount}
+                            className="w-full md:w-auto"
+                        >
+                            Delete Account
+                        </Button>
+                    </CardFooter>
                 </Card>
             </div>
         </div>
