@@ -55,6 +55,13 @@ FOODBRIDGE - PROJECT FEATURES LIST FOR VIDEO
 - Pre-filled Forms: Smart redirection and field pre-filling (e.g., email pre-filled after password reset).
 - Toast Notifications: Real-time visual feedback for every user action (success, error, loading).
 
+7. FUTURE ROADMAP
+-----------------
+- AI Integration & Route Optimization: Predictive ML models for waste reduction and smart logistics.
+- Real-Time GPS Tracking: Live location sharing for seamless food pickups and delivery coordination.
+- Dedicated Mobile Application: Native iOS/Android apps for instant push notifications and on-the-go management.
+- Institutional Partnerships: Integration with Government and municipal food safety systems for systemic impact.
+
 SUGGESTED VIDEO FLOW (UPDATED):
 1. Landing Page: Show branding and theme toggle (Light/Dark).
 2. Signup/Profile: Create a Donor account, set a security question.
@@ -62,4 +69,4 @@ SUGGESTED VIDEO FLOW (UPDATED):
 4. NGO Interaction: Switch to an NGO account, browse the board, and request the donation.
 5. Verification: Show the 15-min cancellation timer on the NGO's dashboard.
 6. Recovery: Demonstrate the "Forgot Password" flow via Security Question.
-7. Profile: Finish with a Password Change and Account Management overview.
+7. Roadmap & Conclusion: Show the PPT slide on future plans (AI, GPS, App, Gov) and wrap up.
