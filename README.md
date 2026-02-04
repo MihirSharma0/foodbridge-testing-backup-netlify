@@ -2,7 +2,7 @@
 
 FoodBridge is a real-time platform connecting restaurants, event hosts, and food providers with NGOs that can distribute surplus food safely and quickly to communities in need. Our mission is to reduce food waste and turn every extra meal into a meaningful impact.
 
-**Live Demo**: [https://foodbridge-0.netlify.app](https://https://foodbridge-0.netlify.app)
+**Live Demo**: [https://foodbridge0.netlify.app](https://https://foodbridge0.netlify.app)
 
 ---
 
