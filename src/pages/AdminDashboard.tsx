@@ -43,7 +43,7 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { collection, getDocs, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, setDoc, updateDoc, query, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -71,24 +71,22 @@ const AdminDashboard = () => {
     const [newUserRole, setNewUserRole] = useState<UserRole>('donor');
     const [newUserDisplayName, setNewUserDisplayName] = useState('');
 
-    const fetchUsers = async () => {
-        try {
-            const querySnapshot = await getDocs(collection(db, 'users'));
+    useEffect(() => {
+        const q = query(collection(db, 'users'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const usersData: User[] = [];
-            querySnapshot.forEach((doc) => {
+            snapshot.forEach((doc) => {
                 usersData.push({ ...doc.data(), id: doc.id } as User);
             });
             setAllUsers(usersData);
-        } catch (error) {
+            setLoading(false);
+        }, (error) => {
             console.error("Error fetching users:", error);
             toast.error("Failed to fetch users");
-        } finally {
             setLoading(false);
-        }
-    };
+        });
 
-    useEffect(() => {
-        fetchUsers();
+        return () => unsubscribe();
     }, []);
 
     const handleLogout = async () => {
@@ -100,7 +98,6 @@ const AdminDashboard = () => {
         if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
             try {
                 await deleteDoc(doc(db, 'users', userId));
-                setAllUsers(prev => prev.filter(u => u.id !== userId));
                 toast.success("User deleted successfully");
             } catch (error) {
                 toast.error("Failed to delete user");
@@ -150,7 +147,6 @@ const AdminDashboard = () => {
             };
 
             await setDoc(doc(db, 'users', userId), newUser);
-            setAllUsers(prev => [...prev, newUser]);
             toast.success("User created successfully");
             setIsAddUserOpen(false);
             // Reset form
@@ -160,14 +156,6 @@ const AdminDashboard = () => {
         } catch (error) {
             toast.error("Failed to create user");
         }
-    };
-
-    const stats = {
-        donors: allUsers.filter(u => u.role === 'donor').length,
-        ngos: allUsers.filter(u => u.role === 'ngo').length,
-        meals: donations
-            .filter(d => d.status === 'collected')
-            .reduce((acc, d) => acc + d.quantity, 0)
     };
 
     const filteredUsers = allUsers.filter(u => {
@@ -184,6 +172,29 @@ const AdminDashboard = () => {
         const matchesStatus = donationStatusFilter === 'all' || d.status === donationStatusFilter;
         return matchesSearch && matchesStatus;
     });
+
+    const stats = {
+        // Users stats reflect total in system, filtered by search but NOT by role filter
+        donors: allUsers.filter(u =>
+            u.role === 'donor' &&
+            (u.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                u.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        ).length,
+        ngos: allUsers.filter(u =>
+            u.role === 'ngo' &&
+            (u.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                u.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        ).length,
+        // Meals stats reflect the selected status stage
+        meals: donations
+            .filter(d => {
+                const matchesSearch = d.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    d.donorName.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchesStatus = donationStatusFilter === 'all' || d.status === donationStatusFilter;
+                return matchesSearch && matchesStatus;
+            })
+            .reduce((acc, d) => acc + (Number(d.quantity) || 0), 0)
+    };
 
     return (
         <div className="min-h-screen bg-background">
@@ -213,7 +224,9 @@ const AdminDashboard = () => {
                         <CardContent className="pt-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-muted-foreground uppercase">Total Donors</p>
+                                    <p className="text-sm font-medium text-muted-foreground uppercase">
+                                        {userRoleFilter === 'all' ? 'Total Donors' : userRoleFilter === 'donor' ? 'Donors Found' : 'Donors'}
+                                    </p>
                                     <h3 className="text-3xl font-bold mt-1">{stats.donors}</h3>
                                 </div>
                                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -226,7 +239,9 @@ const AdminDashboard = () => {
                         <CardContent className="pt-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-muted-foreground uppercase">Total NGOs</p>
+                                    <p className="text-sm font-medium text-muted-foreground uppercase">
+                                        {userRoleFilter === 'all' ? 'Total NGOs' : userRoleFilter === 'ngo' ? 'NGOs Found' : 'NGOs'}
+                                    </p>
                                     <h3 className="text-3xl font-bold mt-1">{stats.ngos}</h3>
                                 </div>
                                 <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
@@ -239,11 +254,22 @@ const AdminDashboard = () => {
                         <CardContent className="pt-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-muted-foreground uppercase">Meals Collected</p>
+                                    <p className="text-sm font-medium text-muted-foreground uppercase">
+                                        {donationStatusFilter === 'all' ? 'Total Meals' : `Meals ${donationStatusFilter.charAt(0).toUpperCase() + donationStatusFilter.slice(1)}`}
+                                    </p>
                                     <h3 className="text-3xl font-bold mt-1">{stats.meals}</h3>
                                 </div>
-                                <div className="w-12 h-12 rounded-2xl bg-green-500/10 flex items-center justify-center">
-                                    <CheckCircle2 className="w-6 h-6 text-green-600" />
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${donationStatusFilter === 'all' ? 'bg-primary/10 text-primary' :
+                                    donationStatusFilter === 'available' ? 'bg-orange-500/10 text-orange-600' :
+                                        donationStatusFilter === 'requested' ? 'bg-blue-500/10 text-blue-600' :
+                                            donationStatusFilter === 'collected' ? 'bg-green-500/10 text-green-600' :
+                                                'bg-red-500/10 text-red-600'
+                                    }`}>
+                                    {donationStatusFilter === 'all' && <ShoppingBag className="w-6 h-6" />}
+                                    {donationStatusFilter === 'available' && <Clock className="w-6 h-6" />}
+                                    {donationStatusFilter === 'requested' && <AlertCircle className="w-6 h-6" />}
+                                    {donationStatusFilter === 'collected' && <CheckCircle2 className="w-6 h-6" />}
+                                    {donationStatusFilter === 'cancelled' && <XCircle className="w-6 h-6" />}
                                 </div>
                             </div>
                         </CardContent>
