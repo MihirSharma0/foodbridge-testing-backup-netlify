@@ -11,7 +11,7 @@ import {
   EmailAuthProvider,
   updatePassword
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
 export type UserRole = 'donor' | 'ngo';
@@ -29,6 +29,7 @@ export interface User {
     answer: string;
   };
   profilePic?: string;
+  customPassword?: string; // Used for password recovery via security questions
 }
 
 interface AuthContextType {
@@ -44,6 +45,9 @@ interface AuthContextType {
   createProfile: (profileData: Omit<User, 'id' | 'email' | 'username'>) => Promise<{ success: boolean; error?: string }>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
   changePassword: (oldPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  getSecurityQuestion: (emailOrUsername: string) => Promise<{ success: boolean; question?: string; error?: string }>;
+  verifySecurityAnswer: (emailOrUsername: string, answer: string) => Promise<{ success: boolean; error?: string }>;
+  resetPasswordWithSecurityQuestion: (emailOrUsername: string, answer: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -158,6 +162,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(mockUser);
       setNeedsProfile(false);
       return { success: true };
+    }
+
+    // Check Firestore for custom password (from security question reset)
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data() as User;
+        if (userData.customPassword && userData.customPassword === password) {
+          console.log('Login successful via custom password');
+          const mockUser = { ...userData, id: querySnapshot.docs[0].id };
+          sessionStorage.setItem('manual_user', JSON.stringify(mockUser));
+          setUser(mockUser);
+          setNeedsProfile(false);
+          return { success: true };
+        }
+      }
+    } catch (error) {
+      console.error('Custom password check error:', error);
     }
 
     try {
@@ -306,6 +331,107 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
+  const getSecurityQuestion = useCallback(async (emailOrUsername: string) => {
+    try {
+      // Find user by email or username
+      const usersRef = collection(db, 'users');
+      let q = query(usersRef, where('email', '==', emailOrUsername));
+      let querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        q = query(usersRef, where('username', '==', emailOrUsername));
+        querySnapshot = await getDocs(q);
+      }
+
+      if (querySnapshot.empty) {
+        return { success: false, error: 'User not found' };
+      }
+
+      const userData = querySnapshot.docs[0].data() as User;
+      if (!userData.securityQuestion?.question) {
+        return { success: false, error: 'No security question set for this account' };
+      }
+
+      return { success: true, question: userData.securityQuestion.question };
+    } catch (error) {
+      console.error('Get security question error:', error);
+      return { success: false, error: 'Failed to fetch security question' };
+    }
+  }, []);
+
+  const verifySecurityAnswer = useCallback(async (emailOrUsername: string, answer: string) => {
+    try {
+      const usersRef = collection(db, 'users');
+      let q = query(usersRef, where('email', '==', emailOrUsername));
+      let querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        q = query(usersRef, where('username', '==', emailOrUsername));
+        querySnapshot = await getDocs(q);
+      }
+
+      if (querySnapshot.empty) {
+        return { success: false, error: 'User not found' };
+      }
+
+      const userData = querySnapshot.docs[0].data() as User;
+
+      if (!userData.securityQuestion) {
+        return { success: false, error: 'No security question set for this account' };
+      }
+
+      if (userData.securityQuestion.answer.toLowerCase().trim() !== answer.toLowerCase().trim()) {
+        return { success: false, error: 'Incorrect answer' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Verify security answer error:', error);
+      return { success: false, error: 'Verification failed' };
+    }
+  }, []);
+
+  const resetPasswordWithSecurityQuestion = useCallback(async (emailOrUsername: string, answer: string, newPassword: string) => {
+    try {
+      // Find user by email or username
+      const usersRef = collection(db, 'users');
+      let q = query(usersRef, where('email', '==', emailOrUsername));
+      let querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        q = query(usersRef, where('username', '==', emailOrUsername));
+        querySnapshot = await getDocs(q);
+      }
+
+      if (querySnapshot.empty) {
+        return { success: false, error: 'User not found' };
+      }
+
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data() as User;
+
+      if (!userData.securityQuestion) {
+        return { success: false, error: 'No security question set for this account' };
+      }
+
+      // Case-insensitive answer check
+      if (userData.securityQuestion.answer.toLowerCase().trim() !== answer.toLowerCase().trim()) {
+        return { success: false, error: 'Incorrect answer' };
+      }
+
+      // Update the custom password in Firestore for demo purposes
+      const userRef = doc(db, 'users', userDoc.id);
+      await updateDoc(userRef, {
+        customPassword: newPassword
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return { success: false, error: 'Failed to reset password' };
+    }
+  }, []);
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -319,7 +445,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updateUser,
       createProfile,
       deleteAccount,
-      changePassword
+      changePassword,
+      getSecurityQuestion,
+      verifySecurityAnswer,
+      resetPasswordWithSecurityQuestion
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Leaf, Store, HandHeart, Phone, Building2, User } from 'lucide-react';
+import { Leaf, Store, HandHeart, Phone, Building2, User, HelpCircle, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 const CompleteProfile = () => {
     const navigate = useNavigate();
@@ -18,6 +25,8 @@ const CompleteProfile = () => {
     const [displayName, setDisplayName] = useState('');
     const [companyName, setCompanyName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
+    const [securityQuestion, setSecurityQuestion] = useState('What was your first pet\'s name?');
+    const [securityAnswer, setSecurityAnswer] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -37,6 +46,10 @@ const CompleteProfile = () => {
             role,
             companyName,
             phoneNumber,
+            securityQuestion: {
+                question: securityQuestion,
+                answer: securityAnswer
+            }
         });
 
         if (result.success) {
@@ -143,6 +156,41 @@ const CompleteProfile = () => {
                                         required
                                     />
                                     <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="securityQuestion">Security Question</Label>
+                                <div className="relative">
+                                    <Select
+                                        value={securityQuestion}
+                                        onValueChange={setSecurityQuestion}
+                                    >
+                                        <SelectTrigger className="pl-10">
+                                            <SelectValue placeholder="Select a security question" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="What was your first pet's name?">What was your first pet's name?</SelectItem>
+                                            <SelectItem value="What is your mother's maiden name?">What is your mother's maiden name?</SelectItem>
+                                            <SelectItem value="What city were you born in?">What city were you born in?</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <HelpCircle className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="securityAnswer">Security Answer</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="securityAnswer"
+                                        value={securityAnswer}
+                                        onChange={(e) => setSecurityAnswer(e.target.value)}
+                                        className="pl-10"
+                                        placeholder="Your answer"
+                                        required
+                                    />
+                                    <Key className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                 </div>
                             </div>
 
