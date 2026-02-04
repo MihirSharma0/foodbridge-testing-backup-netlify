@@ -9,6 +9,11 @@ import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { toast } from 'sonner';
 
+const demoCredentials = [
+  { role: 'donor' as UserRole, username: 'donor1', password: 'donor123', label: 'Donor Demo' },
+  { role: 'ngo' as UserRole, username: 'ngo1', password: 'ngo123', label: 'NGO Demo' },
+];
+
 const Login = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -163,6 +168,13 @@ const Login = () => {
     if (mode !== 'recovery') {
       navigate(`/login?mode=${mode}&role=${newRole}`, { replace: true });
     }
+  };
+
+  const handleDemoLogin = (cred: typeof demoCredentials[0]) => {
+    setEmail(cred.username);
+    setPassword(cred.password);
+    setRole(cred.role);
+    toast.success(`Filled credentials for ${cred.label}`);
   };
 
   return (
@@ -435,6 +447,34 @@ const Login = () => {
             </>
           )}
         </div>
+
+        {mode === 'login' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-6 p-4 glass rounded-2xl border-dashed"
+          >
+            <p className="text-xs font-medium text-muted-foreground mb-3 text-center uppercase tracking-wider">Demo Credentials</p>
+            <div className="flex gap-2">
+              {demoCredentials.map((cred) => (
+                <Button
+                  key={cred.role}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-xs gap-2 py-5"
+                  onClick={() => handleDemoLogin(cred)}
+                >
+                  <Key className="w-3 h-3" />
+                  <div className="text-left">
+                    <div className="font-semibold">{cred.label}</div>
+                    <div className="opacity-60">{cred.username}</div>
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         <div className="text-center mt-6">
           <button onClick={() => navigate('/')} className="text-sm text-muted-foreground hover:text-foreground">
