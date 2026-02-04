@@ -1,19 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Leaf, Store, HandHeart, Phone, Building2, User, Mail, RefreshCcw, CheckCircle2 } from 'lucide-react';
+import { Leaf, Store, HandHeart, Phone, Building2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { toast } from 'sonner';
-import { auth } from '@/lib/firebase';
 
 const CompleteProfile = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { createProfile, needsProfile, user, isLoggedIn, isEmailVerified, resendVerification, refreshVerificationStatus, logout } = useAuth();
+    const { createProfile, needsProfile, user, isLoggedIn } = useAuth();
 
     const roleParam = searchParams.get('role') as UserRole;
     const [role, setRole] = useState<UserRole>(roleParam || 'donor');
@@ -21,9 +19,6 @@ const CompleteProfile = () => {
     const [companyName, setCompanyName] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isResending, setIsResending] = useState(false);
-    const [isRefreshing, setIsRefreshing] = useState(false);
-    const [verificationSuccess, setVerificationSuccess] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -31,29 +26,6 @@ const CompleteProfile = () => {
             navigate(user.role === 'donor' ? '/donor/dashboard' : '/ngo/dashboard');
         }
     }, [isLoggedIn, needsProfile, user, navigate]);
-
-    const handleResend = async () => {
-        setIsResending(true);
-        const result = await resendVerification();
-        if (result.success) {
-            toast.success("Verification link resent!");
-        } else {
-            setError(result.error || "Failed to resend verification");
-        }
-        setIsResending(false);
-    };
-
-    const handleRefresh = async () => {
-        setIsRefreshing(true);
-        const verified = await refreshVerificationStatus();
-        if (verified) {
-            setVerificationSuccess(true);
-            toast.success("Email verified!");
-        } else {
-            toast.error("Email not verified yet. Please check your inbox.");
-        }
-        setIsRefreshing(false);
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -98,137 +70,91 @@ const CompleteProfile = () => {
 
                     <div className="text-center mb-6">
                         <h1 className="text-2xl font-bold mb-2">
-                            {isEmailVerified ? `Complete Your Profile - ${role === 'donor' ? 'Donor' : 'NGO'}` : 'Verify Your Email'}
+                            Complete Your Profile - {role === 'donor' ? 'Donor' : 'NGO'}
                         </h1>
                         <p className="text-muted-foreground text-sm">
-                            {isEmailVerified ? 'Just a few more details to get you started' : `We've sent a verification link to ${auth.currentUser?.email}`}
+                            Just a few more details to get you started
                         </p>
                     </div>
 
-                    {!isEmailVerified ? (
-                        <div className="space-y-6">
-                            <div className="flex flex-col items-center justify-center py-6 space-y-4">
-                                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
-                                    <Mail className="w-10 h-10 text-primary" />
-                                </div>
-                                <div className="text-center space-y-2">
-                                    <p className="text-sm text-muted-foreground">
-                                        Click the link in the email we sent you to continue.
-                                        Don't see it? Check your spam folder.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3">
-                                <Button
-                                    onClick={handleRefresh}
-                                    className="w-full h-12 gap-2"
-                                    disabled={isRefreshing}
-                                >
-                                    {isRefreshing ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                                    I've Verified My Email
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    onClick={handleResend}
-                                    className="w-full h-12"
-                                    disabled={isResending}
-                                >
-                                    {isResending ? 'Sending...' : 'Resend Verification Email'}
-                                </Button>
-
+                    <div className="space-y-6">
+                        {!roleParam && (
+                            <div className="flex rounded-2xl bg-muted p-1 mb-8">
                                 <button
-                                    onClick={async () => {
-                                        await logout();
-                                        navigate('/login');
-                                    }}
-                                    className="text-sm text-primary hover:underline block w-full text-center mt-4"
+                                    onClick={() => setRole('donor')}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${role === 'donor' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
                                 >
-                                    Back to Sign In
+                                    <Store className="w-4 h-4" />
+                                    <span>Donor</span>
+                                </button>
+                                <button
+                                    onClick={() => setRole('ngo')}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${role === 'ngo' ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground'}`}
+                                >
+                                    <HandHeart className="w-4 h-4" />
+                                    <span>NGO</span>
                                 </button>
                             </div>
-                        </div>
-                    ) : (
-                        <>
-                            {!roleParam && (
-                                <div className="flex rounded-2xl bg-muted p-1 mb-8">
-                                    <button
-                                        onClick={() => setRole('donor')}
-                                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${role === 'donor' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
-                                    >
-                                        <Store className="w-4 h-4" />
-                                        <span>Donor</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setRole('ngo')}
-                                        className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${role === 'ngo' ? 'bg-accent text-accent-foreground shadow-sm' : 'text-muted-foreground'}`}
-                                    >
-                                        <HandHeart className="w-4 h-4" />
-                                        <span>NGO</span>
-                                    </button>
+                        )}
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="displayName">Your Full Name</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="displayName"
+                                        value={displayName}
+                                        onChange={(e) => setDisplayName(e.target.value)}
+                                        className="pl-10"
+                                        placeholder="John Doe"
+                                        required
+                                    />
+                                    <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="companyName">
+                                    {role === 'donor' ? 'Restaurant/Store Name' : 'NGO Name'}
+                                </Label>
+                                <div className="relative">
+                                    <Input
+                                        id="companyName"
+                                        value={companyName}
+                                        onChange={(e) => setCompanyName(e.target.value)}
+                                        className="pl-10"
+                                        placeholder={role === 'donor' ? 'Example Restaurant' : 'Helping Hands NGO'}
+                                        required
+                                    />
+                                    <Building2 className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="phoneNumber">Phone Number</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="phoneNumber"
+                                        type="tel"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
+                                        className="pl-10"
+                                        placeholder="+1 (555) 000-0000"
+                                        required
+                                    />
+                                    <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                </div>
+                            </div>
+
+                            {error && (
+                                <p className="text-destructive text-sm text-center">{error}</p>
                             )}
 
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="displayName">Your Full Name</Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="displayName"
-                                            value={displayName}
-                                            onChange={(e) => setDisplayName(e.target.value)}
-                                            className="pl-10"
-                                            placeholder="John Doe"
-                                            required
-                                        />
-                                        <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="companyName">
-                                        {role === 'donor' ? 'Restaurant/Store Name' : 'NGO Name'}
-                                    </Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="companyName"
-                                            value={companyName}
-                                            onChange={(e) => setCompanyName(e.target.value)}
-                                            className="pl-10"
-                                            placeholder={role === 'donor' ? 'Example Restaurant' : 'Helping Hands NGO'}
-                                            required
-                                        />
-                                        <Building2 className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="phoneNumber">Phone Number</Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="phoneNumber"
-                                            type="tel"
-                                            value={phoneNumber}
-                                            onChange={(e) => setPhoneNumber(e.target.value)}
-                                            className="pl-10"
-                                            placeholder="+1 (555) 000-0000"
-                                            required
-                                        />
-                                        <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                    </div>
-                                </div>
-
-                                {error && (
-                                    <p className="text-destructive text-sm text-center">{error}</p>
-                                )}
-
-                                <Button type="submit" disabled={isLoading} className="w-full h-12 text-lg">
-                                    {isLoading ? 'Saving...' : 'Finish Setup'}
-                                </Button>
-                            </form>
-                        </>
-                    )}
+                            <Button type="submit" disabled={isLoading} className="w-full h-12 text-lg">
+                                {isLoading ? 'Saving...' : 'Finish Setup'}
+                            </Button>
+                        </form>
+                    </div>
                 </div>
             </motion.div>
         </div>

@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Leaf, Eye, EyeOff, AlertCircle, Store, HandHeart, Mail } from 'lucide-react';
+import { Leaf, Eye, EyeOff, AlertCircle, Store, HandHeart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { auth } from '@/lib/firebase';
 
 const Login = () => {
   const [searchParams] = useSearchParams();
@@ -28,7 +27,6 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
 
   // Redirect if already logged in and profile is complete
   useEffect(() => {
@@ -52,20 +50,16 @@ const Login = () => {
       if (result.success) {
         // Auth state listener handles redirect
       } else {
-        if (result.unverified) {
-          setError('Please verify your email. Check your inbox for the link.');
-        } else {
-          setError(result.error || 'Login failed');
-          if (result.error?.includes('Account does not exist')) {
-            setShowSignupPrompt(true);
-          }
+        setError(result.error || 'Login failed');
+        if (result.error?.includes('Account does not exist')) {
+          setShowSignupPrompt(true);
         }
       }
     } else {
       const result = await signUp(email, password, role);
       if (result.success) {
-        setVerificationSent(true);
         setError('');
+        // Auth state listener will handle redirect once user is logged in
       } else {
         setError(result.error || 'Signup failed');
       }
@@ -186,15 +180,6 @@ const Login = () => {
                 </button>
               </div>
             </div>
-
-            <AnimatePresence>
-              {verificationSent && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="text-green-600 dark:text-green-400 text-sm flex items-center gap-2 bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
-                  <Mail className="w-4 h-4" />
-                  <span>A verification link has been sent to {email}. Please verify your email before signing in.</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             <AnimatePresence>
               {error && (

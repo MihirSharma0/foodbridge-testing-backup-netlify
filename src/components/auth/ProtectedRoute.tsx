@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requiredRole, profileRequired }: ProtectedRouteProps) => {
-  const { isLoggedIn, isEmailVerified, needsProfile, user, isLoading } = useAuth();
+  const { isLoggedIn, needsProfile, user, isLoading } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -17,12 +17,6 @@ export const ProtectedRoute = ({ children, requiredRole, profileRequired }: Prot
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
-  }
-
-  // If manual signup, must be verified
-  if (!isEmailVerified && !user) {
-    // NOTE: Google users are usually auto-verified. 
-    // For manual, we check if they have a profile yet.
   }
 
   if (profileRequired && needsProfile) {
