@@ -6,7 +6,10 @@ import {
   signOut,
   GoogleAuthProvider,
   signInWithPopup,
-  User as FirebaseUser
+  User as FirebaseUser,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  updatePassword
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -40,6 +43,7 @@ interface AuthContextType {
   updateUser: (updates: Partial<User>) => Promise<void>;
   createProfile: (profileData: Omit<User, 'id' | 'email' | 'username'>) => Promise<{ success: boolean; error?: string }>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -283,6 +287,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
+  const changePassword = useCallback(async (oldPassword: string, newPassword: string) => {
+    if (!auth.currentUser || !auth.currentUser.email) return { success: false, error: 'User not authenticated' };
+
+    try {
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, oldPassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      await updatePassword(auth.currentUser, newPassword);
+      return { success: true };
+    } catch (error) {
+      console.error('Change password error:', error);
+      const authError = error as { code?: string };
+      let message = (error as Error).message;
+      if (authError.code === 'auth/invalid-credential' || authError.code === 'auth/wrong-password') {
+        message = 'Incorrect current password';
+      }
+      return { success: false, error: message };
+    }
+  }, []);
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -295,7 +318,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       logout,
       updateUser,
       createProfile,
-      deleteAccount
+      deleteAccount,
+      changePassword
     }}>
       {children}
     </AuthContext.Provider>
@@ -309,3 +333,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

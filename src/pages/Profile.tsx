@@ -10,10 +10,16 @@ import { User, Mail, Phone, Building, Camera, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
-    const { user, updateUser, deleteAccount } = useAuth();
+    const { user, updateUser, deleteAccount, changePassword } = useAuth();
     const navigate = useNavigate();
 
     const [isEditing, setIsEditing] = useState(false);
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+    const [passwords, setPasswords] = useState({
+        old: "",
+        new: "",
+        confirm: ""
+    });
     const [formData, setFormData] = useState({
         displayName: user?.displayName || "",
         email: user?.email || "",
@@ -59,6 +65,34 @@ const Profile = () => {
             } else {
                 toast.error(result.error || "Failed to delete account.");
             }
+        }
+    };
+
+    const handleChangePassword = async () => {
+        if (!passwords.old || !passwords.new || !passwords.confirm) {
+            toast.error("Please fill in all password fields.");
+            return;
+        }
+
+        if (passwords.new !== passwords.confirm) {
+            toast.error("New passwords do not match.");
+            return;
+        }
+
+        if (passwords.new.length < 6) {
+            toast.error("New password must be at least 6 characters long.");
+            return;
+        }
+
+        setIsUpdatingPassword(true);
+        const result = await changePassword(passwords.old, passwords.new);
+        setIsUpdatingPassword(false);
+
+        if (result.success) {
+            toast.success("Password updated successfully!");
+            setPasswords({ old: "", new: "", confirm: "" });
+        } else {
+            toast.error(result.error || "Failed to update password.");
         }
     };
 
@@ -181,6 +215,67 @@ const Profile = () => {
                             </Button>
                         </CardFooter>
                     )}
+                </Card>
+
+                <Card className="border-none shadow-premium overflow-hidden">
+                    <CardHeader>
+                        <CardTitle className="text-xl font-bold">Security</CardTitle>
+                        <CardDescription>Update your account password</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                handleChangePassword();
+                            }}
+                            className="space-y-4"
+                        >
+                            <div className="space-y-2">
+                                <Label htmlFor="oldPassword">Current Password</Label>
+                                <Input
+                                    id="oldPassword"
+                                    type="password"
+                                    value={passwords.old}
+                                    onChange={(e) => setPasswords({ ...passwords, old: e.target.value })}
+                                    placeholder="••••••••"
+                                    required
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="newPassword">New Password</Label>
+                                    <Input
+                                        id="newPassword"
+                                        type="password"
+                                        value={passwords.new}
+                                        onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                                        placeholder="••••••••"
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                                    <Input
+                                        id="confirmPassword"
+                                        type="password"
+                                        value={passwords.confirm}
+                                        onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                                        placeholder="••••••••"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="pt-2 flex justify-end">
+                                <Button
+                                    type="submit"
+                                    disabled={isUpdatingPassword}
+                                    className="px-8 bg-secondary hover:bg-green-500 text-muted-foreground hover:text-black shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95 border border-border/50"
+                                >
+                                    {isUpdatingPassword ? "Changing..." : "Change password"}
+                                </Button>
+                            </div>
+                        </form>
+                    </CardContent>
                 </Card>
 
                 <Card className="border-destructive/20 bg-destructive/5 shadow-none mt-8">
