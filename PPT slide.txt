@@ -39,7 +39,11 @@ SLIDE 6: FEASIBILITY & REAL-WORLD IMPACT
 - Economic Advantage: Potential tax-deduction tracking for restaurant donors and reduced procurement costs for NGOs.
 
 SLIDE 7: VISION & CONCLUSION
-- The Future Roadmap: Integration of AI for predicting peak waste times and route optimization for pickup logistics.
+- The Future Roadmap:
+    * AI Integration & Route Optimization: Predictive ML models for waste reduction and smart logistics.
+    * Real-Time GPS Tracking: Live location sharing for seamless food pickups.
+    * Dedicated Mobile Application: Native iOS/Android apps for instant push notifications and on-the-go management.
+    * Institutional Partnerships: Integration with Government and municipal food safety systems for city-wide impact.
 - Summary: FoodBridge isn't just a database; it's a movement towards a zero-waste society.
 - Call to Action: Help us turn surplus food into a community asset.
 - Closing: "Connecting those who have too much with those who have too little."
