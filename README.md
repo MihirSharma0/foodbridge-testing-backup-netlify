@@ -1,57 +1,73 @@
-# Welcome to FoodBridge project
+# FoodBridge - Turning Surplus Into Support
 
-## Project info
+FoodBridge is a real-time platform connecting restaurants, event hosts, and food providers with NGOs that can distribute surplus food safely and quickly to communities in need. Our mission is to reduce food waste and turn every extra meal into a meaningful impact.
 
-**URL**: https://foodbridge-testing-84111-663ac.web.app
+**Live Demo**: [https://foodbridge-0.netlify.app](https://https://foodbridge-0.netlify.app)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 👥 Our Team
 
-**Use your preferred IDE**
+We are a passionate team of developers dedicated to building technical solutions for social good:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Mihir Sharma** - [GitHub](https://github.com/MihirSharma0) | [LinkedIn](https://www.linkedin.com/in/mihir-sharma-data-ai/) | [sharmamihir012@gmail.com](mailto:sharmamihir012@gmail.com)
+- **Md Irfan** 
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## ✨ Features
 
-Follow these steps:
+- **Real-time Connectivity**: Instantly connect food donors (restaurants/caterers) with local NGOs.
+- **Role-based Dashboards**: Custom interfaces for both Donors and NGOs to manage donations and pick-ups.
+- **Profile Management**: Complete and manage user profiles tailored to specific roles.
+- **Responsive Design**: A sleek, theme-aware (Light/Dark mode) UI built with modern web standards.
+- **Direct Contact**: A dedicated contact section to reach out to the project creators.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🚀 Getting Started
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Prerequisites
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+- [Node.js](https://nodejs.org/) (v18 or later)
+- npm (installed automatically with Node.js)
 
-**Edit a file directly in GitHub**
+### Installation
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. **Clone the repository**:
+   ```sh
+   git clone https://github.com/MihirSharma0/foodbridge-manual-credential-login.git
+   cd foodbridge-manual-credential-login
+   ```
 
-**Use GitHub Codespaces**
+2. **Install dependencies**:
+   ```sh
+   npm install
+   ```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+3. **Start the development server**:
+   ```sh
+   npm run dev
+   ```
 
-## What technologies are used for this project?
+4. **Build for production**:
+   ```sh
+   npm run build
+   ```
 
-This project is built with:
+---
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🛠️ Technology Stack
 
-My Project
+- **Frontend**: [React](https://reactjs.org/) + [Vite](https://vitejs.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Backend/Auth**: [Firebase](https://firebase.google.com/)
+- **State Management**: [TanStack Query](https://tanstack.com/query/latest)
+- **Icons**: [Lucide React](https://lucide.dev/)
+
+---
+
+## 📜 License
+
+This project is created for the community. Together, we're turning waste into impact, one meal at a time.

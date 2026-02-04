@@ -1,4 +1,4 @@
-import { Leaf, Heart, Github, Twitter } from 'lucide-react';
+import { Leaf, Heart, Github, Linkedin } from 'lucide-react';
 
 export const Footer = () => {
   return (
@@ -14,7 +14,7 @@ export const Footer = () => {
               <span className="font-bold text-xl">FoodBridge</span>
             </div>
             <p className="text-primary-foreground/70 max-w-sm">
-              Connecting food surplus with communities in need. Together, we're turning 
+              Connecting food surplus with communities in need. Together, we're turning
               waste into impact, one meal at a time.
             </p>
           </div>
@@ -33,7 +33,7 @@ export const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Connect</h4>
             <ul className="space-y-2 text-primary-foreground/70">
-              <li><a href="#" className="hover:text-primary-foreground transition-colors">Contact</a></li>
+              <li><a href="/contact" className="hover:text-primary-foreground transition-colors">Contact</a></li>
               <li><a href="#" className="hover:text-primary-foreground transition-colors">Support</a></li>
               <li><a href="#" className="hover:text-primary-foreground transition-colors">FAQs</a></li>
             </ul>
@@ -43,13 +43,13 @@ export const Footer = () => {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-primary-foreground/60">
-            © 2024 FoodBridge. Made with <Heart className="w-3 h-3 inline text-accent" /> for the community.
+            © 2026 FoodBridge. Made by Mihir Sharma.
           </p>
           <div className="flex items-center gap-4">
-            <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">
-              <Twitter className="w-5 h-5" />
+            <a href="https://www.linkedin.com/in/mihir-sharma-data-ai/" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">
+              <Linkedin className="w-5 h-5" />
             </a>
-            <a href="#" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">
+            <a href="https://github.com/MihirSharma0" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">
               <Github className="w-5 h-5" />
             </a>
           </div>

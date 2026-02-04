@@ -12,6 +12,7 @@ import DonorDashboard from "./pages/DonorDashboard";
 import NGODashboard from "./pages/NGODashboard";
 import Profile from "./pages/Profile";
 import CompleteProfile from "./pages/CompleteProfile";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 import { ThemeProvider } from "@/components/ui/theme-provider";
@@ -63,6 +64,7 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 />
+                <Route path="/contact" element={<Contact />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

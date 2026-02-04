@@ -7,9 +7,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const navItems = [
-  { label: 'Problem', href: '#problem' },
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Benefits', href: '#benefits' },
+  { label: 'Problem', href: '#problem', type: 'section' },
+  { label: 'How It Works', href: '#how-it-works', type: 'section' },
+  { label: 'Benefits', href: '#benefits', type: 'section' },
+  { label: 'Contact', href: '/contact', type: 'page' },
 ];
 
 export const Navbar = () => {
@@ -27,14 +28,18 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleNavClick = (href: string) => {
-    if (location.pathname !== '/') {
-      navigate('/');
-      setTimeout(() => {
-        document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+  const handleNavClick = (item: { label: string; href: string; type: string }) => {
+    if (item.type === 'page') {
+      navigate(item.href);
     } else {
-      document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' });
+      if (location.pathname !== '/') {
+        navigate('/');
+        setTimeout(() => {
+          document.querySelector(item.href)?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else {
+        document.querySelector(item.href)?.scrollIntoView({ behavior: 'smooth' });
+      }
     }
     setIsMobileMenuOpen(false);
   };
@@ -78,11 +83,12 @@ export const Navbar = () => {
 
             {/* Desktop nav */}
             <div className="hidden md:flex items-center gap-8">
-              {location.pathname === '/' && navItems.map((item) => (
+              {navItems.map((item) => (
                 <button
                   key={item.href}
-                  onClick={() => handleNavClick(item.href)}
-                  className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+                  onClick={() => handleNavClick(item)}
+                  className={`text-muted-foreground hover:text-foreground transition-colors text-sm font-medium ${location.pathname === item.href ? 'text-primary' : ''
+                    }`}
                 >
                   {item.label}
                 </button>
@@ -141,11 +147,12 @@ export const Navbar = () => {
           className="fixed inset-x-0 top-16 z-40 bg-background border-b border-border md:hidden"
         >
           <div className="container px-4 py-4 space-y-4">
-            {location.pathname === '/' && navItems.map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.href}
-                onClick={() => handleNavClick(item.href)}
-                className="block w-full text-left py-2 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => handleNavClick(item)}
+                className={`block w-full text-left py-2 text-muted-foreground hover:text-foreground transition-colors ${location.pathname === item.href ? 'text-primary font-semibold' : ''
+                  }`}
               >
                 {item.label}
               </button>

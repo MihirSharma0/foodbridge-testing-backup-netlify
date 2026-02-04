@@ -69,6 +69,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsLoading(true);
+
+      // Check for manual hardcoded session first
+      const manualUser = sessionStorage.getItem('manual_user');
+      if (manualUser) {
+        const profile = JSON.parse(manualUser) as User;
+        setUser(profile);
+        setIsEmailVerified(true);
+        setNeedsProfile(false);
+        setIsLoading(false);
+        return;
+      }
+
       if (firebaseUser) {
         setIsEmailVerified(firebaseUser.emailVerified);
 
@@ -92,6 +104,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [fetchUserProfile]);
 
   const login = useCallback(async (email: string, password: string) => {
+    // Hardcoded test logins - Truly manual bypass
+    if ((email === 'donor1' || email === 'donor2') && password === 'donor123') {
+      const mockUser: User = {
+        id: `manual-donor-${email === 'donor1' ? '1' : '2'}`,
+        email: `${email}@test.com`,
+        username: email,
+        role: 'donor',
+        displayName: `Donor Test User ${email === 'donor1' ? '1' : '2'}`,
+        companyName: 'Test Restaurant',
+        phoneNumber: '+1234567890'
+      };
+      sessionStorage.setItem('manual_user', JSON.stringify(mockUser));
+      setUser(mockUser);
+      setIsEmailVerified(true);
+      setNeedsProfile(false);
+      return { success: true };
+    }
+
+    if ((email === 'ngo1' || email === 'ngo2') && password === 'ngo123') {
+      const mockUser: User = {
+        id: `manual-ngo-${email === 'ngo1' ? '1' : '2'}`,
+        email: `${email}@test.com`,
+        username: email,
+        role: 'ngo',
+        displayName: `NGO Test User ${email === 'ngo1' ? '1' : '2'}`,
+        companyName: 'Test NGO',
+        phoneNumber: '+1234567890'
+      };
+      sessionStorage.setItem('manual_user', JSON.stringify(mockUser));
+      setUser(mockUser);
+      setIsEmailVerified(true);
+      setNeedsProfile(false);
+      return { success: true };
+    }
+
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       if (!result.user.emailVerified) {
@@ -166,6 +213,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = useCallback(async () => {
     await signOut(auth);
+    sessionStorage.removeItem('manual_user');
     setUser(null);
   }, []);
 
@@ -183,7 +231,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   return (
     <AuthContext.Provider value={{
       user,
-      isLoggedIn: !!auth.currentUser,
+      isLoggedIn: !!auth.currentUser || !!user,
       isEmailVerified,
       needsProfile,
       isLoading,

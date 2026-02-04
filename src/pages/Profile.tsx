@@ -129,7 +129,7 @@ const Profile = () => {
 
                             <div className="space-y-2">
                                 <Label className="text-muted-foreground flex items-center gap-2">
-                                    <Mail className="h-4 w-4" /> Email Address
+                                    <Mail className="h-4 w-4" /> Username / Email Address
                                 </Label>
                                 {isEditing ? (
                                     <Input
