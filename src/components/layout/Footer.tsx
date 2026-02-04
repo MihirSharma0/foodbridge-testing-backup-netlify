@@ -41,7 +41,7 @@ export const Footer = () => {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-primary-foreground/60">
-            © 2026 FoodBridge. Made by Mihir Sharma.
+            © 2026 FoodBridge. Made by EcoLogic Devs.
           </p>
           <div className="flex items-center gap-4">
             <a href="https://www.linkedin.com/in/mihir-sharma-data-ai/" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">
