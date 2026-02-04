@@ -14,7 +14,7 @@ import {
 import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 
-export type UserRole = 'donor' | 'ngo';
+export type UserRole = 'donor' | 'ngo' | 'admin';
 
 export interface User {
   id: string;
@@ -106,39 +106,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [fetchUserProfile]);
 
   const login = useCallback(async (emailOrUsername: string, password: string) => {
-    let email = emailOrUsername;
+    const identifier = emailOrUsername.trim().toLowerCase();
+    const cleanPassword = password.trim();
+    let email = identifier;
 
-    // Check if it's a username (no '@' symbol)
-    if (!emailOrUsername.includes('@')) {
-      try {
-        const usersRef = collection(db, 'users');
-        const q = query(usersRef, where('username', '==', emailOrUsername));
-        const querySnapshot = await getDocs(q);
+    console.log('Login attempt:', { identifier, passwordLength: cleanPassword.length });
 
-        if (!querySnapshot.empty) {
-          const userData = querySnapshot.docs[0].data() as User;
-          email = userData.email;
-        } else {
-          // Allow hardcoded demo accounts to pass through even if not in Firestore
-          const isDemoAccount = ['donor1', 'donor2', 'ngo1', 'ngo2'].includes(emailOrUsername);
-          if (!isDemoAccount) {
-            return { success: false, error: 'Account does not exist. Please create an account.' };
-          }
-        }
-      } catch (error) {
-        console.error('Error looking up username:', error);
-        return { success: false, error: 'Login failed during user lookup' };
-      }
+    // 1. Hardcoded Bypass Checks (Priority)
+    if (identifier === 'admin' && cleanPassword === 'admin123') {
+      console.log('Admin bypass triggered');
+      const mockUser: User = {
+        id: 'manual-admin-1',
+        email: 'admin@foodbridge.com',
+        username: 'admin',
+        role: 'admin',
+        displayName: 'Administrator',
+      };
+      sessionStorage.setItem('manual_user', JSON.stringify(mockUser));
+      setUser(mockUser);
+      setNeedsProfile(false);
+      return { success: true };
     }
 
-    // Hardcoded test logins - Truly manual bypass
-    if ((email === 'donor1' || email === 'donor2') && password === 'donor123') {
+    if ((identifier === 'donor1' || identifier === 'donor2') && cleanPassword === 'donor123') {
       const mockUser: User = {
-        id: `manual-donor-${email === 'donor1' ? '1' : '2'}`,
-        email: `${email}@test.com`,
-        username: email,
+        id: `manual-donor-${identifier === 'donor1' ? '1' : '2'}`,
+        email: `${identifier}@test.com`,
+        username: identifier,
         role: 'donor',
-        displayName: `Donor Test User ${email === 'donor1' ? '1' : '2'}`,
+        displayName: `Donor Test User ${identifier === 'donor1' ? '1' : '2'}`,
         companyName: 'Test Restaurant',
         phoneNumber: '+1234567890'
       };
@@ -148,13 +144,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return { success: true };
     }
 
-    if ((email === 'ngo1' || email === 'ngo2') && password === 'ngo123') {
+    if ((identifier === 'ngo1' || identifier === 'ngo2') && cleanPassword === 'ngo123') {
       const mockUser: User = {
-        id: `manual-ngo-${email === 'ngo1' ? '1' : '2'}`,
-        email: `${email}@test.com`,
-        username: email,
+        id: `manual-ngo-${identifier === 'ngo1' ? '1' : '2'}`,
+        email: `${identifier}@test.com`,
+        username: identifier,
         role: 'ngo',
-        displayName: `NGO Test User ${email === 'ngo1' ? '1' : '2'}`,
+        displayName: `NGO Test User ${identifier === 'ngo1' ? '1' : '2'}`,
         companyName: 'Test NGO',
         phoneNumber: '+1234567890'
       };
@@ -162,6 +158,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(mockUser);
       setNeedsProfile(false);
       return { success: true };
+    }
+
+    // 2. Username to Email Lookup (Firestore)
+    if (!identifier.includes('@')) {
+      try {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('username', '==', identifier));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data() as User;
+          email = userData.email;
+        } else {
+          // If not in firestore and not handled by bypass above, it's an invalid account
+          return { success: false, error: 'Account does not exist. Please create an account.' };
+        }
+      } catch (error) {
+        console.error('Error looking up username:', error);
+        return { success: false, error: 'Login failed during user lookup' };
+      }
     }
 
     // Check Firestore for custom password (from security question reset)

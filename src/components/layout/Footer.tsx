@@ -29,13 +29,11 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Admin */}
           <div>
-            <h4 className="font-semibold mb-4">Connect</h4>
+            <h4 className="font-semibold mb-4">Administration</h4>
             <ul className="space-y-2 text-primary-foreground/70">
-              <li><a href="/contact" className="hover:text-primary-foreground transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-primary-foreground transition-colors">Support</a></li>
-              <li><a href="#" className="hover:text-primary-foreground transition-colors">FAQs</a></li>
+              <li><a href="/login?role=admin" className="hover:text-primary-foreground transition-colors flex items-center gap-2">Admin Login</a></li>
             </ul>
           </div>
         </div>

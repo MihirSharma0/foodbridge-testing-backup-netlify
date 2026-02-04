@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 const demoCredentials = [
   { role: 'donor' as UserRole, username: 'donor1', password: 'donor123', label: 'Donor Demo' },
   { role: 'ngo' as UserRole, username: 'ngo1', password: 'ngo123', label: 'NGO Demo' },
+  { role: 'admin' as UserRole, username: 'admin', password: 'admin123', label: 'Admin Demo' },
 ];
 
 const Login = () => {
@@ -59,7 +60,11 @@ const Login = () => {
       if (needsProfile) {
         navigate(`/complete-profile?role=${role}`);
       } else if (user) {
-        navigate(user.role === 'donor' ? '/donor/dashboard' : '/ngo/dashboard');
+        if (user.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else {
+          navigate(user.role === 'donor' ? '/donor/dashboard' : '/ngo/dashboard');
+        }
       }
     }
   }, [isLoggedIn, user, needsProfile, authLoading, navigate, role]);
@@ -229,6 +234,15 @@ const Login = () => {
                 <HandHeart className="w-4 h-4" />
                 <span>NGO</span>
               </button>
+              {role === 'admin' && (
+                <button
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all bg-primary text-primary-foreground shadow-sm"
+                  disabled
+                >
+                  <Key className="w-4 h-4" />
+                  <span>Admin</span>
+                </button>
+              )}
             </div>
           )}
 
