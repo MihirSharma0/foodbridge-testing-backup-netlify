@@ -11,7 +11,7 @@ FoodBridge is a real-time platform connecting restaurants, event hosts, and food
 We are a passionate team of developers dedicated to building technical solutions for social good:
 
 - **Mihir Sharma** - [GitHub](https://github.com/MihirSharma0) | [LinkedIn](https://www.linkedin.com/in/mihir-sharma-data-ai/) | [sharmamihir012@gmail.com](mailto:sharmamihir012@gmail.com)
-- **Md Irfan** 
+- **Md Irfan** - [GitHub](https://github.com/irfan-8271) | [LinkedIn](https://www.linkedin.com/in/md-irfan-6979303a6/) | [Mail](mailto:mdi720408@gmail.com)
 ---
 
 ## ✨ Features
