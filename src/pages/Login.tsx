@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 const demoCredentials = [
   { role: 'donor' as UserRole, username: 'donor1', password: 'donor123', label: 'Donor Demo' },
   { role: 'ngo' as UserRole, username: 'ngo1', password: 'ngo123', label: 'NGO Demo' },
-  { role: 'admin' as UserRole, username: 'admin', password: 'admin123', label: 'Admin Demo' },
 ];
 
 const Login = () => {
@@ -462,7 +461,7 @@ const Login = () => {
           )}
         </div>
 
-        {mode === 'login' && (
+        {mode !== 'recovery' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -477,7 +476,10 @@ const Login = () => {
                   variant="outline"
                   size="sm"
                   className="flex-1 text-xs gap-2 py-5"
-                  onClick={() => handleDemoLogin(cred)}
+                  onClick={() => {
+                    handleDemoLogin(cred);
+                    if (mode === 'signup') setMode('login');
+                  }}
                 >
                   <Key className="w-3 h-3" />
                   <div className="text-left">
