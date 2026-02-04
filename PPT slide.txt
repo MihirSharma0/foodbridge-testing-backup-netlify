@@ -4,7 +4,7 @@ SLIDE 1: TITLE PAGE
 - Purpose: A Real-time Strategic Food Redistribution Platform
 - Team Name: EcoLogic Devs
 - Presenters: Mihir Sharma, Md Irfan, Parijat Das, Syed Qasim
-- Context: Hackathon Project Submission / Sustainable Development Goal 2: Zero Hunger
+- Theme: Sustainability, Social Impact, and Environment
 
 SLIDE 2: PROBLEM STATEMENT
 - The Paradox: Millions of tons of edible food are discarded daily by restaurants and grocery stores, while local communities face severe food insecurity.
